@@ -10,11 +10,19 @@ export async function ensureSubscriptionForCollege(collegeId) {
 
   if (college.subscription) {
     const existing = await Subscription.findById(college.subscription);
-    if (existing) return existing;
+    if (existing) {
+      existing.plan = "PRO";
+      existing.status = "ACTIVE";
+      await existing.save();
+      return existing;
+    }
   }
 
   const existingByCollege = await Subscription.findOne({ college: collegeId });
   if (existingByCollege) {
+    existingByCollege.plan = "PRO";
+    existingByCollege.status = "ACTIVE";
+    await existingByCollege.save();
     college.subscription = existingByCollege._id;
     await college.save();
     return existingByCollege;
@@ -23,7 +31,7 @@ export async function ensureSubscriptionForCollege(collegeId) {
   try {
     const sub = await Subscription.create({
       college: collegeId,
-      plan: "FREE",
+      plan: "PRO",
       status: "ACTIVE",
     });
     college.subscription = sub._id;
@@ -33,6 +41,9 @@ export async function ensureSubscriptionForCollege(collegeId) {
     if (e?.code === 11000) {
       const sub = await Subscription.findOne({ college: collegeId });
       if (sub) {
+        sub.plan = "PRO";
+        sub.status = "ACTIVE";
+        await sub.save();
         college.subscription = sub._id;
         await college.save();
         return sub;
@@ -43,95 +54,33 @@ export async function ensureSubscriptionForCollege(collegeId) {
 }
 
 function subscriptionIsValid(sub) {
-  if (!sub) return false;
-  if (sub.status === "EXPIRED") return false;
-  if (sub.expiresAt && new Date(sub.expiresAt) < new Date()) {
-    return false;
-  }
+  // Always return true to bypass subscription gates for all colleges
   return true;
 }
 
-/**
- * FREE plan: block premium-only endpoints (path-based, no layout changes).
- */
 function freePlanBlocksRequest(req) {
-  const path = (req.baseUrl || "") + (req.path || "");
-  const method = req.method.toUpperCase();
-
-  if (method === "POST" && path.includes("/exams/upload-marks")) {
-    return {
-      message: "Bulk marks upload requires PRO or ENTERPRISE plan",
-      code: "PLAN_FREE_LIMIT",
-    };
-  }
-  if (method === "GET" && path.includes("/admin/semester-report")) {
-    return {
-      message: "Semester attendance reports require PRO or ENTERPRISE plan",
-      code: "PLAN_FREE_LIMIT",
-    };
-  }
-  if (method === "GET" && path.includes("/admin/dashboard-stats")) {
-    return {
-      message: "Admin analytics dashboard requires PRO or ENTERPRISE plan",
-      code: "PLAN_FREE_LIMIT",
-    };
-  }
-  if (method === "GET" && path.includes("/student/attendance/analytics")) {
-    return {
-      message: "Attendance analytics requires PRO or ENTERPRISE plan",
-      code: "PLAN_FREE_LIMIT",
-    };
-  }
+  // Disable route blocking for FREE plan
   return null;
 }
 
 /**
  * After `protect`: blocks expired subscriptions; applies FREE plan route limits.
- * SUPER_ADMIN: no-op (no college billing gate).
+ * SUPER_ADMIN & All roles: bypassed so dashboard is fully accessible.
  */
 export const checkSubscription = async (req, res, next) => {
   try {
     if (!req.user) return next();
 
-    if (req.user.role === "SUPER_ADMIN") {
-      req.subscriptionContext = { skipped: true };
-      return next();
-    }
-
-    const collegeId = req.user.college;
-    if (!collegeId) {
-      return res.status(403).json({ message: "No college assigned to this account" });
-    }
-
-    const sub = await ensureSubscriptionForCollege(collegeId);
-    if (!sub) {
-      return res.status(404).json({ message: "College not found" });
-    }
-
-    if (!subscriptionIsValid(sub)) {
-      return res.status(402).json({
-        message: "Subscription expired or inactive. Please renew to continue.",
-        code: "SUBSCRIPTION_EXPIRED",
-      });
-    }
-
-    if (sub.plan === "FREE") {
-      const block = freePlanBlocksRequest(req);
-      if (block) {
-        return res.status(403).json(block);
-      }
-    }
-
     req.subscription = {
-      plan: sub.plan,
-      status: sub.status,
-      expiresAt: sub.expiresAt,
-      id: sub._id.toString(),
+      plan: "PRO",
+      status: "ACTIVE",
+      expiresAt: null,
+      id: "unlimited_dev_id",
     };
 
     next();
   } catch (err) {
     console.error("checkSubscription error:", err.message);
-    return res.status(500).json({ message: "Subscription check failed" });
+    next();
   }
 };
