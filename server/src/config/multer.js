@@ -3,13 +3,21 @@ import multer from 'multer'
 import path   from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs'
+import os from 'os'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// Ensure upload directory exists at runtime
-const uploadDir = path.join(__dirname, '../../../uploads/notes')
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true })
+// Use /tmp on Vercel serverless environment, otherwise local relative folder
+const uploadDir = process.env.VERCEL
+  ? path.join(os.tmpdir(), 'uploads', 'notes')
+  : path.join(__dirname, '../../../uploads/notes')
+
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true })
+  }
+} catch (err) {
+  console.warn('⚠️ Could not create uploadDir:', err.message)
 }
 
 const storage = multer.diskStorage({
