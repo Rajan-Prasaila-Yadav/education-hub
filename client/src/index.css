@@ -1,0 +1,170 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --sidebar-width: 260px;
+    --topbar-height: 64px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: #F5F5FA;
+    color: #111118;
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #C8C8DA; border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9F9FBA; }
+}
+
+@layer components {
+  .heading-display { font-family: 'Syne', sans-serif; font-weight: 700; letter-spacing: -0.03em; }
+  .heading-section  { font-family: 'Syne', sans-serif; font-weight: 600; letter-spacing: -0.02em; }
+
+  .card { @apply bg-white rounded-2xl shadow-card border border-ink-100 overflow-hidden; }
+  .card-hover { @apply card transition-all duration-300 hover:shadow-card-hover hover:-translate-y-0.5 cursor-pointer; }
+  .stat-card { @apply card p-5 flex flex-col gap-3; }
+
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-ink-500
+           transition-all duration-200 hover:bg-ink-50 hover:text-ink-900 cursor-pointer;
+  }
+  .nav-item.active { @apply bg-ink-900 text-white shadow-sm; }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-medium rounded-xl
+           transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2
+           disabled:opacity-40 disabled:cursor-not-allowed select-none;
+  }
+  .btn-primary { @apply btn bg-ink-900 text-white hover:bg-ink-800 focus:ring-ink-700 px-5 py-2.5 text-sm; }
+  .btn-volt    { @apply btn bg-volt-500 text-ink-900 hover:bg-volt-400 focus:ring-volt-600 px-5 py-2.5 text-sm font-semibold; }
+  .btn-ghost   { @apply btn text-ink-600 hover:bg-ink-100 hover:text-ink-900 focus:ring-ink-300 px-4 py-2 text-sm; }
+  .btn-danger  { @apply btn bg-coral-500 text-white hover:bg-coral-600 focus:ring-coral-400 px-5 py-2.5 text-sm; }
+  .btn-sm      { @apply px-3 py-1.5 text-xs; }
+  .btn-icon    { @apply btn p-2 rounded-lg bg-ink-50 text-ink-600 hover:bg-ink-100; }
+
+  .input {
+    @apply w-full px-4 py-2.5 rounded-xl border border-ink-200 bg-white text-sm text-ink-900
+           placeholder:text-ink-400 focus:outline-none focus:border-azure-500 focus:ring-2
+           focus:ring-azure-500/20 transition-all duration-200;
+  }
+  .label  { @apply block text-xs font-semibold text-ink-600 uppercase tracking-wider mb-1.5; }
+  .form-group { @apply flex flex-col gap-1; }
+
+  /* â”€â”€ Tables â€” horizontal scroll on mobile â”€â”€ */
+  .table-wrapper { @apply card overflow-x-auto; }
+  .table         { @apply w-full text-sm; min-width: 520px; }
+  .table thead th {
+    @apply px-4 py-3 text-left text-xs font-semibold text-ink-500 uppercase tracking-wider
+           bg-ink-50 border-b border-ink-100 whitespace-nowrap;
+  }
+  .table tbody tr  { @apply border-b border-ink-50 hover:bg-ink-50/50 transition-colors duration-150; }
+  .table tbody td  { @apply px-4 py-3 text-ink-700; }
+
+  .badge        { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold; }
+  .badge-green  { @apply badge bg-jade-50 text-jade-600; }
+  .badge-red    { @apply badge bg-coral-50 text-coral-600; }
+  .badge-amber  { @apply badge bg-amber-50 text-amber-600; }
+  .badge-blue   { @apply badge bg-azure-50 text-azure-600; }
+  .badge-gray   { @apply badge bg-ink-100 text-ink-600; }
+
+  .progress-bar  { @apply w-full h-1.5 bg-ink-100 rounded-full overflow-hidden; }
+  .progress-fill { @apply h-full rounded-full transition-all duration-500; }
+
+  .empty-state { @apply flex flex-col items-center justify-center py-16 text-center text-ink-400; }
+
+  /* â”€â”€ Page header â€” stacks on mobile â”€â”€ */
+  .page-header {
+    @apply mb-6 flex items-start justify-between gap-3 flex-wrap;
+  }
+  .page-title { @apply heading-section text-xl sm:text-2xl text-ink-900; }
+  .page-sub   { @apply text-sm text-ink-500 mt-1; }
+
+  .notif-dot  { @apply absolute -top-1 -right-1 w-2 h-2 bg-coral-500 rounded-full; }
+
+  .avatar     { @apply rounded-full overflow-hidden flex items-center justify-center font-semibold select-none; }
+  .avatar-sm  { @apply avatar w-8 h-8 text-xs; }
+  .avatar-md  { @apply avatar w-10 h-10 text-sm; }
+  .avatar-lg  { @apply avatar w-14 h-14 text-base; }
+}
+
+/* â”€â”€ App shell layout â”€â”€ */
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: var(--topbar-height) 1fr;
+  min-height: 100vh;
+}
+.sidebar {
+  grid-row: 1 / 3;
+  grid-column: 1;
+}
+.topbar {
+  grid-row: 1;
+  grid-column: 2;
+}
+.main-content {
+  grid-row: 2;
+  grid-column: 2;
+  overflow-y: auto;
+  /* comfortable padding that collapses on mobile */
+  padding: 1.5rem;
+}
+
+/* â”€â”€ Mobile: hide sidebar, single column â”€â”€ */
+@media (max-width: 1024px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: var(--topbar-height) 1fr;
+  }
+  .sidebar { display: none; }
+  .topbar, .main-content { grid-column: 1; }
+  .main-content { padding: 1rem; }
+}
+
+/* â”€â”€ Bottom nav bar (mobile only) â”€â”€ */
+.bottom-nav {
+  display: none;
+}
+@media (max-width: 1024px) {
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    background: white;
+    border-top: 1px solid #E8E8F0;
+    padding: 0.5rem 0.25rem;
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    gap: 0;
+    justify-content: space-around;
+    align-items: center;
+  }
+  /* push main content above bottom nav */
+  .main-content {
+    padding-bottom: 5rem;
+  }
+}
+
+/* â”€â”€ Login page â”€â”€ */
+.login-bg {
+  background: #0A0A0F;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(59,127,255,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 60%, rgba(168,255,0,0.06) 0%, transparent 60%);
+}
+
+.chart-container { @apply relative h-48; }
